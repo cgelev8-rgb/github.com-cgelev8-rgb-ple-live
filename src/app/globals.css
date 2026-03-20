@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Private Label Express Brand Colors */
+  --color-ple-navy: #1b265e;
+  --color-ple-blue: #0074d9;
+  --color-ple-orange: #f9ad31;
+  --color-ple-slate: #7c82a3;
+  --color-ple-gray: #aaaaaa;
+  --color-ple-light: #f4f4f4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 30s linear infinite;
+}
+
+/* Pause on hover for accessibility */
+.animate-scroll:hover {
+  animation-play-state: paused;
+}

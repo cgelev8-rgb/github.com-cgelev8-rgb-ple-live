@@ -1,0 +1,435 @@
+;
+            } else if (browser === "Chrome") {
+                return _getVersion(ua, "Chrome/");
+            } else if (browser === "Firefox") {
+                return _getVersion(ua, "Firefox/");
+            } else if (browser === "Silk") {
+                return _getVersion(ua, "Silk/");
+            } else if (browser === "AOSP") {
+                return _getVersion(ua, "Version/");
+            } else if (browser === "IE") {
+                return /IEMobile/.test(ua) ? _getVersion(ua, "IEMobile/") :
+                    /MSIE/.test(ua) ? _getVersion(ua, "MSIE ")
+                        :
+                        _getVersion(ua, "rv:");
+            } else if (browser === "Safari") {
+                return _getVersion(ua, "Version/");
+            } else if (browser === "WebKit") {
+                return _getVersion(ua, "WebKit/");
+            }
+            return "0.0.0";
+        }
+
+        function _getVersion(ua, token) {
+            try {
+                return _normalizeSemverString(ua.split(token)[1].trim().split(/[^\w\.]/)[0]);
+            } catch (o_O) {
+            }
+            return "0.0.0";
+        }
+
+        function _normalizeSemverString(version) {
+            const ary = version.split(/[\._]/);
+            return (parseInt(ary[0], 10) || 0) + "." +
+                (parseInt(ary[1], 10) || 0) + "." +
+                (parseInt(ary[2], 10) || 0);
+        }
+
+        function _isWebView(ua, os, browser, version, options) {
+            switch (os + browser) {
+                case "iOSSafari":
+                    return false;
+                case "iOSWebKit":
+                    return _isWebView_iOS(options);
+                case "AndroidAOSP":
+                    return false;
+                case "AndroidChrome":
+                    return parseFloat(version) >= 42 ? /; wv/.test(ua) : /\d{2}\.0\.0/.test(version) ? true : _isWebView_Android(options);
+            }
+            return false;
+        }
+
+        function _isWebView_iOS(options) {
+            const document = (window["document"] || {});
+
+            if ("WEB_VIEW" in options) {
+                return options["WEB_VIEW"];
+            }
+            return !("fullscreenEnabled" in document || "webkitFullscreenEnabled" in document || false);
+        }
+
+        function _isWebView_Android(options) {
+            if ("WEB_VIEW" in options) {
+                return options["WEB_VIEW"];
+            }
+            return !("requestFileSystem" in window || "webkitRequestFileSystem" in window || false);
+        }
+
+        const options = {},
+            nav = window.navigator || {},
+            ua = nav.userAgent || "",
+            os = _detectOS(ua),
+            browser = _detectBrowser(ua),
+            browserVersion = _detectBrowserVersion(ua, browser);
+
+        isWebView = _isWebView(ua, os, browser, browserVersion, options);
+    }
+
+    return isWebView;
+}
+
+function isAllowedWebViewForUserAgent(provider) {
+    const facebookAllowedWebViews = [
+        'Instagram',
+        'FBAV',
+        'FBAN'
+    ];
+    let whitelist = [];
+
+    if (provider && provider === 'facebook') {
+        whitelist = facebookAllowedWebViews;
+    }
+
+    const nav = window.navigator || {},
+        ua = nav.userAgent || "";
+
+    if (whitelist.length && ua.match(new RegExp(whitelist.join('|')))) {
+        return true;
+    }
+
+    return false;
+}
+
+function disableButtonInWebView(providerButtonElement) {
+    if (providerButtonElement) {
+        providerButtonElement.classList.add('nsl-disabled-provider');
+        providerButtonElement.setAttribute('href', '#');
+
+        providerButtonElement.addEventListener('pointerdown', (e) => {
+            if (!window._nslWebViewNoticeElement) {
+                window._nslWebViewNoticeElement = document.createElement('div');
+                window._nslWebViewNoticeElement.id = "nsl-notices-fallback";
+                window._nslWebViewNoticeElement.addEventListener('pointerdown', function (e) {
+                    this.parentNode.removeChild(this);
+                    window._nslWebViewNoticeElement = null;
+                });
+                const webviewNoticeHTML = '<div class="error"><p>' + scriptOptions._localizedStrings.webview_notification_text + '</p></div>';
+
+                window._nslWebViewNoticeElement.insertAdjacentHTML("afterbegin", webviewNoticeHTML);
+                document.body.appendChild(window._nslWebViewNoticeElement);
+            }
+        });
+    }
+
+}
+
+window._nslDOMReady(function () {
+
+    window.nslRedirect = function (url) {
+        if (scriptOptions._redirectOverlay) {
+            const overlay = document.createElement('div');
+            overlay.id = "nsl-redirect-overlay";
+            let overlayHTML = '';
+            const overlayContainer = "<div id='nsl-redirect-overlay-container'>",
+                overlayContainerClose = "</div>",
+                overlaySpinner = "<div id='nsl-redirect-overlay-spinner'></div>",
+                overlayTitle = "<p id='nsl-redirect-overlay-title'>" + scriptOptions._localizedStrings.redirect_overlay_title + "</p>",
+                overlayText = "<p id='nsl-redirect-overlay-text'>" + scriptOptions._localizedStrings.redirect_overlay_text + "</p>";
+
+            switch (scriptOptions._redirectOverlay) {
+                case "overlay-only":
+                    break;
+                case "overlay-with-spinner":
+                    overlayHTML = overlayContainer + overlaySpinner + overlayContainerClose;
+                    break;
+                default:
+                    overlayHTML = overlayContainer + overlaySpinner + overlayTitle + overlayText + overlayContainerClose;
+                    break;
+            }
+
+            overlay.insertAdjacentHTML("afterbegin", overlayHTML);
+            document.body.appendChild(overlay);
+        }
+
+        window.location = url;
+    };
+
+    let targetWindow = scriptOptions._targetWindow || 'prefer-popup',
+        lastPopup = false;
+
+
+    document.addEventListener('click', function (e) {
+        if (e.target) {
+            const buttonLinkElement = e.target.closest('a[data-plugin="nsl"][data-action="connect"]') || e.target.closest('a[data-plugin="nsl"][data-action="link"]');
+            if (buttonLinkElement) {
+                if (lastPopup && !lastPopup.closed) {
+                    e.preventDefault();
+                    lastPopup.focus();
+                } else {
+
+                    let href = buttonLinkElement.href,
+                        success = false;
+                    if (href.indexOf('?') !== -1) {
+                        href += '&';
+                    } else {
+                        href += '?';
+                    }
+
+                    const redirectTo = buttonLinkElement.dataset.redirect;
+                    if (redirectTo === 'current') {
+                        href += 'redirect=' + encodeURIComponent(window.location.href) + '&';
+                    } else if (redirectTo && redirectTo !== '') {
+                        href += 'redirect=' + encodeURIComponent(redirectTo) + '&';
+                    }
+
+                    if (targetWindow !== 'prefer-same-window' && checkWebView()) {
+                        targetWindow = 'prefer-same-window';
+                    }
+
+                    if (targetWindow === 'prefer-popup') {
+                        lastPopup = NSLPopup(href + 'display=popup', 'nsl-social-connect', buttonLinkElement.dataset.popupwidth, buttonLinkElement.dataset.popupheight);
+                        if (lastPopup) {
+                            success = true;
+                            e.preventDefault();
+                        }
+                    } else if (targetWindow === 'prefer-new-tab') {
+                        const newTab = window.open(href + 'display=popup', '_blank');
+                        if (newTab) {
+                            if (window.focus) {
+                                newTab.focus();
+                            }
+                            success = true;
+                            window._nslHasOpenedPopup = true;
+                            e.preventDefault();
+                        }
+                    }
+
+                    if (!success) {
+                        window.location = href;
+                        e.preventDefault();
+                    }
+                }
+            }
+        }
+    });
+
+    let buttonCountChanged = false;
+
+    const googleLoginButtons = document.querySelectorAll(' a[data-plugin="nsl"][data-provider="google"]');
+    if (googleLoginButtons.length && checkWebView()) {
+        googleLoginButtons.forEach(function (googleLoginButton) {
+            if (scriptOptions._unsupportedWebviewBehavior === 'disable-button') {
+                disableButtonInWebView(googleLoginButton);
+            } else {
+                googleLoginButton.remove();
+                buttonCountChanged = true;
+            }
+        });
+    }
+
+    const facebookLoginButtons = document.querySelectorAll(' a[data-plugin="nsl"][data-provider="facebook"]');
+    if (facebookLoginButtons.length && checkWebView() && /Android/.test(window.navigator.userAgent) && !isAllowedWebViewForUserAgent('facebook')) {
+        facebookLoginButtons.forEach(function (facebookLoginButton) {
+            if (scriptOptions._unsupportedWebviewBehavior === 'disable-button') {
+                disableButtonInWebView(facebookLoginButton);
+            } else {
+                facebookLoginButton.remove();
+                buttonCountChanged = true;
+            }
+        });
+    }
+
+    const separators = document.querySelectorAll('div.nsl-separator');
+    if (buttonCountChanged && separators.length) {
+        separators.forEach(function (separator) {
+            const separatorParentNode = separator.parentNode;
+            if (separatorParentNode) {
+                const separatorButtonContainer = separatorParentNode.querySelector('div.nsl-container-buttons');
+                if (separatorButtonContainer && !separatorButtonContainer.hasChildNodes()) {
+                    separator.remove();
+                }
+            }
+        })
+    }
+});})();</script>
+		<!-- Cookie Notice plugin v2.5.13 by Hu-manity.co https://hu-manity.co/ -->
+		<div id="cookie-notice" role="dialog" class="cookie-notice-hidden cookie-revoke-hidden cn-position-bottom" aria-label="Cookie Notice" style="background-color: rgba(34,43,96,1);"><div class="cookie-notice-container" style="color: #fff"><span id="cn-notice-text" class="cn-text-container">This website uses cookies to ensure you get the best experience.</span><span id="cn-notice-buttons" class="cn-buttons-container"><button id="cn-accept-cookie" data-cookie-set="accept" class="cn-set-cookie cn-button" aria-label="Ok" style="background-color: #faac18">Ok</button><button data-link-url="https://privatelabelexpress.com/privacy-policy/" data-link-target="_blank" id="cn-more-info" class="cn-more-info cn-button" aria-label="Privacy policy" style="background-color: #faac18">Privacy policy</button></span><button type="button" id="cn-close-notice" data-cookie-set="accept" class="cn-close-icon" aria-label="No"></button></div>
+			
+		</div>
+		<!-- / Cookie Notice plugin --><script src='https://privatelabelexpress.com/wp-content/plugins/breakdance/plugin/global-scripts/breakdance-utils.js?bd_ver=2.2.0' defer></script>
+<script src='https://privatelabelexpress.com/wp-content/plugins/breakdance/subplugins/breakdance-elements/elements/Header_Builder/header-builder.js?bd_ver=2.2.0' defer></script>
+<script src='https://privatelabelexpress.com/wp-content/plugins/breakdance/subplugins/breakdance-elements/dependencies-files/awesome-menu@1/awesome-menu.js?bd_ver=2.2.0' defer></script>
+<script src='https://unpkg.com/gsap@3.12.2/dist/gsap.min.js' defer></script>
+<script src='https://unpkg.com/gsap@3.12.2/dist/ScrollTrigger.min.js' defer></script>
+<script src='https://privatelabelexpress.com/wp-content/plugins/breakdance/subplugins/breakdance-elements/dependencies-files/imagesloaded@4/imagesloaded.pkgd.min.js?bd_ver=2.2.0' defer></script>
+<script src='https://privatelabelexpress.com/wp-content/plugins/breakdance/plugin/animations/entrance/js/entrance.js?bd_ver=2.2.0' defer></script>
+<script src='https://privatelabelexpress.com/wp-content/plugins/breakdance/subplugins/breakdance-elements/elements/Search_Form/assets/search-form.js?bd_ver=2.2.0' defer></script>
+<script src='https://privatelabelexpress.com/wp-content/plugins/breakdance/subplugins/breakdance-elements/dependencies-files/swiper@8/swiper-bundle.min.js?bd_ver=2.2.0' defer></script>
+<script src='https://privatelabelexpress.com/wp-content/plugins/breakdance/subplugins/breakdance-elements/dependencies-files/breakdance-swiper/breakdance-swiper.js?bd_ver=2.2.0' defer></script>
+<script>document.addEventListener('DOMContentLoaded', function(){     if (!window.BreakdanceFrontend) {
+        window.BreakdanceFrontend = {}
+    }
+
+    window.BreakdanceFrontend.data = {"homeUrl":"https:\/\/privatelabelexpress.com","ajaxUrl":"https:\/\/privatelabelexpress.com\/wp-admin\/admin-ajax.php","elementsPluginUrl":"https:\/\/privatelabelexpress.com\/wp-content\/plugins\/breakdance\/subplugins\/breakdance-elements\/","BASE_BREAKPOINT_ID":"breakpoint_base","breakpoints":[{"id":"breakpoint_base","label":"Desktop","defaultPreviewWidth":"100%"},{"id":"breakpoint_tablet_landscape","label":"Tablet Landscape","defaultPreviewWidth":1024,"maxWidth":1119},{"id":"breakpoint_tablet_portrait","label":"Tablet Portrait","defaultPreviewWidth":768,"maxWidth":1023},{"id":"breakpoint_phone_landscape","label":"Phone Landscape","defaultPreviewWidth":480,"maxWidth":767},{"id":"breakpoint_phone_portrait","label":"Phone Portrait","defaultPreviewWidth":400,"maxWidth":479},{"id":"custom_breakpoint_laptop","label":"Laptop","minWidth":769,"maxWidth":1800,"defaultPreviewWidth":"100%"}],"subscriptionMode":"pro"} }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceHeaderBuilder(".breakdance .bde-header-builder-44132-217", "217", false);
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new AwesomeMenu(".breakdance .bde-menu-44132-222 .breakdance-menu", {
+  dropdown: {
+    openOnClick: false,
+    mode: {
+      desktop: 'dropdown'
+    },
+    placement: 'left',
+    width: null,
+    animation: 'fade'
+  },
+  link: {
+    effect: 'underline',
+    effectDirection: '',
+  },
+  mobile: {
+    breakpoint: '',
+    mode: 'fullscreen',
+    offcanvasPosition: 'right',
+    offset: null,
+    followLinks: true
+  }
+});
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceHeaderBuilder(".breakdance .bde-header-builder-44132-262", "262", false);
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new AwesomeMenu(".breakdance .bde-menu-44132-267 .breakdance-menu", {
+  dropdown: {
+    openOnClick: false,
+    mode: {
+      desktop: 'dropdown'
+    },
+    placement: 'left',
+    width: null,
+    animation: 'fade'
+  },
+  link: {
+    effect: 'underline',
+    effectDirection: '',
+  },
+  mobile: {
+    breakpoint: '',
+    mode: 'fullscreen',
+    offcanvasPosition: 'right',
+    offset: null,
+    followLinks: true
+  }
+});
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceEntrance(
+              '.breakdance .bde-image-box-5990-263',
+              {"animation_type":"slideUp","duration":{"number":800,"unit":"ms","style":"800ms"},"delay":{"number":50,"unit":"ms","style":"50ms"}}
+            )
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceEntrance(
+              '.breakdance .bde-image-box-5990-264',
+              {"animation_type":"slideUp","duration":{"number":400,"unit":"ms","style":"400ms"},"delay":{"number":50,"unit":"ms","style":"50ms"}}
+            )
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceEntrance(
+              '.breakdance .bde-image-box-5990-265',
+              {"animation_type":"slideUp","duration":{"number":200,"unit":"ms","style":"200ms"},"delay":{"number":50,"unit":"ms","style":"50ms"}}
+            )
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceEntrance(
+              '.breakdance .bde-image-box-5990-266',
+              {"animation_type":"slideUp","duration":{"number":600,"unit":"ms","style":"600ms"},"delay":{"number":50,"unit":"ms","style":"50ms"}}
+            )
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceSearchForm('.breakdance .bde-search-form-5990-271', {});
+
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+window.BreakdanceSwiper().update({
+            id: 'bde-advancedslider-5990-115',
+            selector:'.breakdance .bde-advancedslider-5990-115',
+            settings:{"advanced":{"slides_per_view":{"breakpoint_base":7,"breakpoint_tablet_landscape":4,"breakpoint_phone_landscape":2,"breakpoint_phone_portrait":1},"between_slides":{"breakpoint_base":{"number":20,"unit":"px","style":"20px"}},"auto_height":false},"infinite":"enabled","center_slides":false,"effect":"slide"},
+            paginationSettings:{"type":"bullets","overlay":false,"margin":{"breakpoint_base":null}},
+          });
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceEntrance(
+              '.breakdance .bde-advancedslider-5990-115',
+              {"animation_type":"slideUp","advanced":{"once":true}}
+            )
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceEntrance(
+              '.breakdance .bde-column-5990-146',
+              {"animation_type":"slideLeft","advanced":{"once":true}}
+            )
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new BreakdanceEntrance(
+              '.breakdance .bde-image-5990-206',
+              {"animation_type":"slideRight","advanced":{"once":true}}
+            )
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new AwesomeMenu(".breakdance .bde-menu-42335-139 .breakdance-menu", {
+  dropdown: {
+    openOnClick: false,
+    mode: {
+      desktop: 'dropdown'
+    },
+    placement: 'left',
+    width: null,
+    animation: 'fade'
+  },
+  link: {
+    effect: '',
+    effectDirection: '',
+  },
+  mobile: {
+    breakpoint: 'never',
+    mode: 'accordion',
+    offcanvasPosition: 'left',
+    offset: null,
+    followLinks: true
+  }
+});
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+new AwesomeMenu(".breakdance .bde-menu-42335-149 .breakdance-menu", {
+  dropdown: {
+    openOnClick: false,
+    mode: {
+      desktop: 'dropdown'
+    },
+    placement: 'left',
+    width: null,
+    animation: 'fade'
+  },
+  link: {
+    effect: '',
+    effectDirection: '',
+  },
+  mobile: {
+    breakpoint: 'never',
+    mode: 'accordion',
+    offcanvasPosition: 'left',
+    offset: null,
+    followLinks: true
+  }
+});
+ }) </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d415c354b1ccb53',t:'MTc3MjEyOTAxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    </html>
+    
