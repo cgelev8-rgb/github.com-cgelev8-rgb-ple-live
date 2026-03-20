@@ -14,12 +14,6 @@ const nextConfig: NextConfig = {
         source: '/fulfillment/',
         destination: '/fulfillment/supplement-fulfillment',
         permanent: true,
-      },
-      {
-        source: '/fulfillment/supplement-fulfillment/',
-        destination: '/fulfillment/supplement-fulfillment',
-        permanent: true,
-      },
     ];
   },
   async rewrites() {
