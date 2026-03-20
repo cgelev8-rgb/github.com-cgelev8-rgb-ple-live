@@ -33,10 +33,6 @@ export async function middleware(request: NextRequest) {
         const response = await fetch(targetUrl.toString(), {
             method: request.method,
             headers: {
-                // spoof the Host header to force WP Engine to serve the primary domain without redirecting
-                'Host': 'privatelabelexpress.com',
-                'X-Forwarded-Proto': 'https',
-                'X-Forwarded-Host': 'privatelabelexpress.com',
                 // Essential Accept Headers
                 'Accept': request.headers.get('Accept') || 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'User-Agent': request.headers.get('User-Agent') || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
