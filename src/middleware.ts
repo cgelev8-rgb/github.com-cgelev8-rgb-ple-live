@@ -13,6 +13,7 @@ export async function middleware(request: NextRequest) {
         url.pathname.startsWith('/custom-formulas-3') ||
         url.pathname.startsWith('/custom-supplement-manufacturing-2') ||
         url.pathname.startsWith('/fulfillment-application') ||
+        url.pathname.startsWith('/portal') ||
         url.pathname.startsWith('/private-login') ||  // WP login page — needs cookies & POST
         url.pathname.startsWith('/_next') ||
         url.pathname.startsWith('/api') ||
