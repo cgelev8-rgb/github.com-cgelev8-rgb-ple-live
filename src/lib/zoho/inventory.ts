@@ -33,12 +33,15 @@ export async function fetchZohoInventory(endpoint: string, options: RequestInit 
  * Generates an automated invoice for Weekly Billing users
  */
 export async function createWeeklyShippingInvoice(contactId: string, amount: number, dueDate: string) {
+  const itemId = process.env.ZOHO_SHIPPING_CHARGES_ITEM_ID;
+  
   const payload = {
     customer_id: contactId,
     date: new Date().toISOString().split('T')[0],
     due_date: dueDate,
     line_items: [
       {
+        item_id: itemId,
         name: 'Weekly Shipping Charges',
         description: 'Automated weekly billing for shipping labels generated in Veeqo',
         rate: amount,

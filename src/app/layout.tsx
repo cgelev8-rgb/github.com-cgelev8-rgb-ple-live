@@ -3,10 +3,7 @@ import Script from "next/script";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { CartProvider } from "@/context/CartContext";
-import { CartDrawer } from "@/components/commerce/CartDrawer";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { MarketingShell } from "@/components/layout/MarketingShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,12 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <CartProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <CartDrawer />
-        </CartProvider>
+        <MarketingShell>
+          {children}
+        </MarketingShell>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

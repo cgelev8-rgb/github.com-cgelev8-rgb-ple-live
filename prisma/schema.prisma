@@ -68,10 +68,12 @@ model Customer {
   zohoCrmAccountId       String?  @unique
   zohoInventoryContactId String?  @unique
   companyName            String
+  brandSkuPrefix         String?  @unique
   
   billingProfile         BillingProfile?
   walletLedger           ShippingWalletLedger?
   chargeEvents           ShippingChargeEvent[]
+  paymentEvents          PaymentEvent[]
 
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt              DateTime @default(now())
@@ -85,6 +87,7 @@ model BillingProfile {
   creditCap            Float    @default(0.0)
   autoReplenishEnabled Boolean  @default(false)
   fulfillmentHoldStatus Boolean @default(false)
+  pendingTopUpInvoiceId String?  // Blocks new top-ups until this invoice is paid
 
   customer             Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   createdAt            DateTime @default(now())
@@ -107,8 +110,10 @@ model ShippingChargeEvent {
   veeqoOrderId     String
   trackingNumber   String?
   carrier          String?
+  serviceLevel     String?
   cost             Float
   billed           Boolean  @default(false)
+  paid             Boolean  @default(false)
   
   customer         Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   createdAt        DateTime @default(now())
@@ -118,4 +123,17 @@ model ShippingChargeEvent {
 model VeeqoShipmentsSeen {
   veeqoShipmentId  String   @id
   seenAt           DateTime @default(now())
+}
+
+// Audit trail for every payment received from Zoho
+model PaymentEvent {
+  id                String   @id @default(cuid())
+  customerId        String
+  zohoPaymentId     String   @unique  // Idempotency key
+  amount            Float
+  paymentType       String   // "wallet_topup" | "invoice_payment"
+  zohoInvoiceNumber String?
+
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
 }

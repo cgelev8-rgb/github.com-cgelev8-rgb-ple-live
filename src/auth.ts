@@ -36,10 +36,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           await prisma.customer.create({
             data: {
               userId: user.id,
-              companyName: "Test Company Inc.",
+              companyName: "Quit Kit",
+              brandSkuPrefix: "Quit Kit",
               billingProfile: {
                 create: {
-                  billingMode: "wallet"
+                  billingMode: "weekly_autodebit"
                 }
               },
               walletLedger: {

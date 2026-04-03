@@ -12,11 +12,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 1. Determine the 'since' date. Defaults to 24 hours ago if no previous records exist.
-    const lastSeen = await prisma.shippingChargeEvent.findFirst({
-      orderBy: { createdAt: 'desc' }
-    });
-    const sinceDate = lastSeen ? lastSeen.createdAt : new Date(Date.now() - 24 * 60 * 60 * 1000);
+    // 1. Determine the 'since' date. Always poll Veeqo for exact shipments over the past 7 days to ensure missed labels are captured.
+    const sinceDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     // 2. Fetch Shipped Orders from Veeqo
     const orders = await getShippedOrdersSince(sinceDate);
@@ -37,16 +34,29 @@ export async function GET(request: Request) {
         });
 
         if (!seen) {
-          // If the customer matches a known account (mapped via Zoho email or ID later)
-          // For now we assume we have a way to match it. E.g. order.customer.email
-          const customerEmail = order.customer?.email;
-          const dbCustomer = await prisma.customer.findFirst({
-             where: { user: { email: customerEmail } },
-             include: { walletLedger: true, billingProfile: true }
-          });
+          // Extract SKUs from the Veeqo order line items
+          const skus = (order.line_items || []).map((li: any) => li.sellable?.sku_code || "").filter(Boolean);
+          
+          let dbCustomer = null;
+          if (skus.length > 0) {
+            // Retrieve customers with a registered prefix to check for a match
+            const brandCustomers = await prisma.customer.findMany({
+               where: { brandSkuPrefix: { not: null } },
+               include: { walletLedger: true, billingProfile: true }
+            });
+            
+            for (const bc of brandCustomers) {
+              if (bc.brandSkuPrefix && skus.some((sku: string) => sku.startsWith(bc.brandSkuPrefix!))) {
+                dbCustomer = bc;
+                break;
+              }
+            }
+          }
 
-          if (dbCustomer && shipment.cost) {
-             const cost = parseFloat(shipment.cost);
+          const rawCost = shipment.outbound_label_charges?.value || shipment.cost;
+
+          if (dbCustomer && rawCost !== undefined && rawCost !== null) {
+             const cost = parseFloat(rawCost);
 
              await prisma.$transaction(async (tx) => {
                // Record the seen shipment
@@ -59,9 +69,10 @@ export async function GET(request: Request) {
                  data: {
                    customerId: dbCustomer.id,
                    veeqoShipmentId: String(shipment.id),
-                   veeqoOrderId: String(order.id),
-                   trackingNumber: shipment.tracking_number_api,
-                   carrier: shipment.carrier?.name,
+                   veeqoOrderId: String(order.number || order.id),
+                   trackingNumber: shipment.tracking_number_api || shipment.tracking_number?.tracking_number,
+                   carrier: shipment.sub_carrier_id || shipment.service_carrier_name || shipment.carrier?.name,
+                   serviceLevel: shipment.service_name || shipment.short_service_name,
                    cost: cost,
                    billed: false, 
                  }
@@ -74,7 +85,13 @@ export async function GET(request: Request) {
                    data: { balance: { decrement: cost } }
                  });
                  
-                 // TODO: Trigger Fullfillment Hold if balance drops below 0 
+                 if (dbCustomer.walletLedger!.balance - cost < 0) {
+                    await tx.billingProfile.update({
+                      where: { customerId: dbCustomer.id },
+                      data: { fulfillmentHoldStatus: true }
+                    });
+                                        console.log(`[HOLD] Fulfillment hold triggered for customer ${dbCustomer.id} due to zero balance.`);
+                  } 
                }
              });
              newLabelsProcessed++;

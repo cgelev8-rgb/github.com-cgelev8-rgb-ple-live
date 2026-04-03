@@ -54,17 +54,17 @@ export default function SignInPage() {
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
           <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
-            Shipping Wallet Portal
+            Partner Portal
           </h1>
           <p className="text-lg mb-8" style={{ color: "#f9ad31" }}>
             Private Label Express Partner Access
           </p>
           <div className="space-y-4 text-left">
             {[
-              "Real-time wallet balance tracking",
-              "Automated shipping cost capture",
-              "Transparent billing & invoices",
-              "Prepaid & weekly billing modes",
+              "Supply Chain & Inventory Visibility",
+              "Fulfillment Performance Analytics",
+              "Transparent Billing & Invoices",
+              "Actionable Alerts & Restocking Insights",
             ].map((feature) => (
               <div key={feature} className="flex items-center gap-3">
                 <div
@@ -101,7 +101,7 @@ export default function SignInPage() {
             Partner Sign In
           </h2>
           <p className="text-gray-500 mb-8 text-sm">
-            Access your Shipping Wallet dashboard
+            Access your Partner Portal dashboard
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
