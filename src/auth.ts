@@ -38,6 +38,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               userId: user.id,
               companyName: "Quit Kit",
               brandSkuPrefix: "Quit Kit",
+              zohoCrmAccountId: "QUIT-KIT-CRM-001",
               billingProfile: {
                 create: {
                   billingMode: "weekly_autodebit"
