@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
+import { compare } from "bcryptjs"
 import prisma from "@/lib/db"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -20,39 +21,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // Mock authorization for integration purposes
-        if (!credentials?.email) return null;
-        
-        let user = await prisma.user.findUnique({
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const user = await prisma.user.findUnique({
           where: { email: credentials.email as string }
         });
-        
-        // Auto-create test users if they don't exist yet for testing the Wallet
-        if (!user) {
-          user = await prisma.user.create({
-            data: { email: credentials.email as string, name: "Test User" }
-          });
-          
-          await prisma.customer.create({
-            data: {
-              userId: user.id,
-              companyName: "Quit Kit",
-              brandSkuPrefix: "Quit Kit",
-              zohoCrmAccountId: "QUIT-KIT-CRM-001",
-              billingProfile: {
-                create: {
-                  billingMode: "weekly_autodebit"
-                }
-              },
-              walletLedger: {
-                create: {
-                  balance: 500.00
-                }
-              }
-            }
-          })
-        }
-        
+
+        // Deny login if user doesn't exist or has no password set
+        if (!user || !user.password) return null;
+
+        // Verify the submitted password against the stored bcrypt hash
+        const isValid = await compare(
+          credentials.password as string,
+          user.password
+        );
+
+        if (!isValid) return null;
+
         return user;
       }
     }),
