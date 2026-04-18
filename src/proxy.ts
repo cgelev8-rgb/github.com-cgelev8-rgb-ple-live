@@ -105,9 +105,12 @@ export default async function middleware(request: NextRequest) {
     }
 }
 
+export const runtime = 'edge';
+
 export const config = {
     // Capture all routes except explicit next static files and image optimization
     matcher: [
         '/((?!_next/static|_next/image|favicon.ico).*)'
-    ]
+    ],
+    runtime: 'edge'
 };
