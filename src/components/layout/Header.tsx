@@ -12,16 +12,13 @@ export const Header = () => {
 
     const baseUrl = 'https://privatelabelexpress.com';
 
-    // Hide global header on pages with their own custom header
-    if (pathname === '/new-home') return null;
-
     return (
         <header className="bg-white text-ple-navy sticky top-0 z-50 shadow-sm border-b border-gray-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
 
                     {/* Logo - Animated GIF Version per inner pages */}
-                    <Link href={baseUrl} className="flex-shrink-0 flex items-center">
+                    <Link href="/" className="flex-shrink-0 flex items-center">
                         <img
                             src="/images/ple-logo.gif"
                             alt="Private Label Express"
@@ -59,7 +56,7 @@ export const Header = () => {
                                             <ul className="space-y-3">
                                                 <li><a href={`${baseUrl}/custom-supplement-manufacturer/`} className="text-gray-600 hover:text-ple-navy hover:pl-1 transition-all text-sm font-medium block">Custom Formulations</a></li>
                                                 <li><a href={`${baseUrl}/private-label-supplements/`} className="text-gray-600 hover:text-ple-navy hover:pl-1 transition-all text-sm font-medium block">Private Label Supplements</a></li>
-                                                <li><a href={`${baseUrl}/fulfillment/supplement-fulfillment`} className="text-gray-600 hover:text-ple-navy hover:pl-1 transition-all text-sm font-medium block">Fulfillment Services</a></li>
+                                                <li><Link href="/fulfillment/supplement-fulfillment" className="text-gray-600 hover:text-ple-navy hover:pl-1 transition-all text-sm font-medium block">Fulfillment Services</Link></li>
                                             </ul>
                                         </div>
 
@@ -132,7 +129,7 @@ export const Header = () => {
                             <h6 className="text-ple-orange font-bold text-xs uppercase tracking-widest border-b border-gray-100 pb-2">Manufacturing & Fulfillment</h6>
                             <a href={`${baseUrl}/custom-supplement-manufacturer/`} className="block text-ple-navy font-medium">Custom Formulations</a>
                             <a href={`${baseUrl}/private-label-supplements/`} className="block text-ple-navy font-medium">Private Label Supplements</a>
-                            <a href={`${baseUrl}/fulfillment/supplement-fulfillment`} className="block text-ple-navy font-medium">Fulfillment Services</a>
+                            <Link href="/fulfillment/supplement-fulfillment" className="block text-ple-navy font-medium">Fulfillment Services</Link>
                         </div>
 
                         <div className="space-y-4">

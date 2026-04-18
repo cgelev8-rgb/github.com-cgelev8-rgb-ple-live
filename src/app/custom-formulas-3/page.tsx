@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     description:
         "Develop unique, proprietary supplement formulas with our expert R&D team. 100% IP ownership, GMP-certified manufacturing, and low MOQs for custom runs.",
     alternates: {
-        canonical: "https://privatelabelexpress.com/custom-formulas-3",
+        canonical: "https://privatelabelexpress.com/custom-formulas",
     },
 };
 

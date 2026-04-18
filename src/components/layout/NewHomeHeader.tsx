@@ -47,7 +47,7 @@ const MegaMenu = ({
                 <ul className="space-y-3">
                     <li><a href={`${baseUrl}/custom-supplement-manufacturer/`} className="text-gray-600 hover:text-ple-navy hover:pl-1 transition-all text-sm font-medium block">Custom Formulations</a></li>
                     <li><a href={`${baseUrl}/private-label-supplements/`} className="text-gray-600 hover:text-ple-navy hover:pl-1 transition-all text-sm font-medium block">Private Label Supplements</a></li>
-                    <li><a href="/fulfillment/supplement-fulfillment" className="text-gray-600 hover:text-ple-navy hover:pl-1 transition-all text-sm font-medium block">Fulfillment Services</a></li>
+                    <li><Link href="/fulfillment/supplement-fulfillment" className="text-gray-600 hover:text-ple-navy hover:pl-1 transition-all text-sm font-medium block">Fulfillment Services</Link></li>
                 </ul>
             </div>
 
@@ -106,7 +106,7 @@ export const NewHomeHeader = () => {
                     {isScrolled ? (
                         <>
                             {/* Logo */}
-                            <Link href={baseUrl} className="flex-shrink-0 flex items-center">
+                            <Link href="/" className="flex-shrink-0 flex items-center">
                                 <img
                                     src="/images/ple-logo.gif"
                                     alt="Private Label Express"
@@ -187,7 +187,7 @@ export const NewHomeHeader = () => {
                             </nav>
 
                             {/* White Logo (right) */}
-                            <Link href={baseUrl} className="flex-shrink-0 flex items-center ml-auto md:ml-0">
+                            <Link href="/" className="flex-shrink-0 flex items-center ml-auto md:ml-0">
                                 <Image
                                     src="/images/ple-logo-white.png"
                                     alt="Private Label Express"

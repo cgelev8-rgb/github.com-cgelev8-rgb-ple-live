@@ -93,6 +93,15 @@ export default function HomepageQuestionnaireForm() {
         }
     };
 
+    React.useEffect(() => {
+        if (isSuccess) {
+            const timer = setTimeout(() => {
+                window.location.href = "https://calendar.google.com/calendar/u/1/appointments/schedules/AcZssZ1m6jH4IyZOQ33dF_QyFmoO3ua6suIQbiO3VoIFGrYtzK348k6gKQ7S7QByscm6kH2dT5xFNXkN";
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [isSuccess]);
+
     if (isSuccess) {
         return (
             <div className="max-w-xl mx-auto text-center py-20 px-4">
@@ -101,20 +110,18 @@ export default function HomepageQuestionnaireForm() {
                 </div>
                 <h2 className="text-3xl font-bold text-ple-navy mb-4">We look forward to connecting soon!</h2>
                 <p className="text-xl text-gray-600 mb-8">
-                    We&apos;ve received your request. Please choose a time below to schedule your free 15-minute discovery call with our team.
+                    We&apos;ve received your request. Redirecting you to our calendar in 2 seconds...
                 </p>
                 <div className="flex flex-col gap-4 items-center justify-center max-w-sm mx-auto">
                     <a
                         href="https://calendar.google.com/calendar/u/1/appointments/schedules/AcZssZ1m6jH4IyZOQ33dF_QyFmoO3ua6suIQbiO3VoIFGrYtzK348k6gKQ7S7QByscm6kH2dT5xFNXkN"
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="w-full"
                     >
                         <Button className="w-full text-lg shadow-lg shadow-ple-orange/20 py-6">
-                            Schedule Discovery Call
+                            Redirecting to Calendar...
                         </Button>
                     </a>
-                    <Link href="/new-home" className="w-full">
+                    <Link href="/" className="w-full">
                         <Button variant="outline" className="w-full text-gray-500 hover:text-ple-navy">
                             Return Home
                         </Button>
