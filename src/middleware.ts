@@ -4,24 +4,28 @@ import type { NextRequest } from 'next/server';
 export default async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
 
-    // Allow native Next.js routes to pass right through unaffected
-    if (
-        url.pathname === '/' ||
-        url.pathname.startsWith('/fulfillment') ||
-        url.pathname.startsWith('/book-a-call') ||
-        url.pathname.startsWith('/custom-formulas-2') ||
-        url.pathname.startsWith('/custom-formulas-3') ||
-        url.pathname.startsWith('/custom-supplement-manufacturing-2') ||
-        url.pathname.startsWith('/fulfillment-application') ||
-        url.pathname.startsWith('/portal') ||
-        url.pathname.startsWith('/auth/error') ||
-        url.pathname.startsWith('/auth/signin') ||
-        url.pathname.startsWith('/private-login') ||  // WP login page — needs cookies & POST
-        url.pathname.startsWith('/_next') ||
-        url.pathname.startsWith('/api') ||
-        url.pathname === '/next-sitemap.xml' ||
-        (url.pathname.includes('.') && !url.pathname.endsWith('.xml'))
-    ) {
+    const path = url.pathname.toLowerCase();
+    const normalizedPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
+
+    // Allowed Next.js Routes & Assets
+    const isNextRoute = 
+        normalizedPath === '' || 
+        normalizedPath === '/' ||
+        normalizedPath.startsWith('/_next') ||
+        normalizedPath.startsWith('/api') ||
+        normalizedPath.startsWith('/auth') ||
+        normalizedPath.startsWith('/portal') ||
+        normalizedPath.startsWith('/fulfillment') ||
+        normalizedPath.startsWith('/book-a-call') ||
+        normalizedPath.startsWith('/custom-application') ||
+        normalizedPath.startsWith('/fulfillment-application') ||
+        normalizedPath.startsWith('/custom-formulas-3') ||
+        normalizedPath.startsWith('/custom-supplement-manufacturing-2') ||
+        normalizedPath.startsWith('/private-login') ||
+        normalizedPath === '/next-sitemap.xml' ||
+        (normalizedPath.includes('.') && !normalizedPath.endsWith('.xml'));
+
+    if (isNextRoute) {
         return NextResponse.next();
     }
 
