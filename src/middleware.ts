@@ -112,9 +112,10 @@ export default async function middleware(request: NextRequest) {
 export const runtime = 'experimental-edge';
 
 export const config = {
-    // Capture all routes except explicit next static files and image optimization
+    // Capture all routes except explicit next static files, and explicit front-end next.js routes
+    // This strictly forces Cloudflare to serve them as native static edge assets without falling back to the Worker or WP Engine Origin
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico).*)'
+        '/((?!_next/static|_next/image|favicon.ico|book-a-call|custom-application|fulfillment-application|fulfillment|portal|next-sitemap.xml|auth-error|private-login).*)'
     ],
     runtime: 'experimental-edge'
 };
