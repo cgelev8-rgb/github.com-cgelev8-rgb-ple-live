@@ -76,6 +76,11 @@ export default async function middleware(request: NextRequest) {
         // Explicitly do not cache this aggressive tunnel on Vercel Edge right now while testing
         newHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
+        // Debug Headers for fall-through
+        newHeaders.set('x-debug-path', path);
+        newHeaders.set('x-debug-normalized', normalizedPath);
+        newHeaders.set('x-debug-is-next', 'false');
+
         // 4. Rewrite Raw HTML Link Paths Back to Root Domain
         if (contentType.includes('text/html') || contentType.includes('xml')) {
             let body = await response.text();
