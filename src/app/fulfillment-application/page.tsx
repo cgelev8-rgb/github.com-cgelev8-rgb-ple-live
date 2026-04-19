@@ -2,6 +2,9 @@ import React from "react";
 import FulfillmentQuestionnaireForm from "@/components/features/FulfillmentQuestionnaireForm";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+export const runtime = "edge";
+
 export const metadata: Metadata = {
     title: "Fulfillment Services Application | Private Label Express",
     description: "Apply for our high-volume supplement fulfillment and shipping services.",

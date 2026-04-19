@@ -2,6 +2,9 @@ import React from "react";
 import HomepageQuestionnaireForm from "@/components/features/HomepageQuestionnaireForm";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+export const runtime = "edge";
+
 export const metadata: Metadata = {
     title: "Book a Discovery Call | Private Label Express",
     description: "Schedule your free 15-minute discovery call with our supplement manufacturing and fulfillment experts.",

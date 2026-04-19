@@ -2,6 +2,9 @@ import React from "react";
 import HomepageQuestionnaireForm from "@/components/features/HomepageQuestionnaireForm";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+export const runtime = "edge";
+
 export const metadata: Metadata = {
     title: "Custom Manufacturing Application | Private Label Express",
     description: "Start your custom supplement manufacturing project by filling out our brief pre-qualification questionnaire.",
