@@ -7,7 +7,6 @@ export default async function middleware(request: NextRequest) {
     const path = url.pathname.toLowerCase();
     const normalizedPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
 
-    // Allowed Next.js Routes & Assets
     const isNextRoute = 
         normalizedPath === '' || 
         normalizedPath === '/' ||
@@ -15,18 +14,22 @@ export default async function middleware(request: NextRequest) {
         normalizedPath.startsWith('/api') ||
         normalizedPath.startsWith('/auth') ||
         normalizedPath.startsWith('/portal') ||
-        normalizedPath.startsWith('/fulfillment') ||
-        normalizedPath.startsWith('/book-a-call') ||
-        normalizedPath.startsWith('/custom-application') ||
-        normalizedPath.startsWith('/fulfillment-application') ||
-        normalizedPath.startsWith('/custom-formulas-3') ||
-        normalizedPath.startsWith('/custom-supplement-manufacturing-2') ||
-        normalizedPath.startsWith('/private-login') ||
+        normalizedPath.includes('fulfillment') ||
+        normalizedPath.includes('book-a-call') ||
+        normalizedPath.includes('custom-application') ||
+        normalizedPath.includes('fulfillment-application') ||
+        normalizedPath.includes('custom-formulas-3') ||
+        normalizedPath.includes('custom-supplement-manufacturing-2') ||
+        normalizedPath.includes('private-login') ||
         normalizedPath === '/next-sitemap.xml' ||
         (normalizedPath.includes('.') && !normalizedPath.endsWith('.xml'));
 
     if (isNextRoute) {
-        return NextResponse.next();
+        const response = NextResponse.next();
+        response.headers.set('x-debug-path', path);
+        response.headers.set('x-debug-normalized', normalizedPath);
+        response.headers.set('x-debug-is-next', 'true');
+        return response;
     }
 
     // Construct target WP Engine URL mapping natively to their backend
